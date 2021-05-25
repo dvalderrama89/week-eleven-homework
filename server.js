@@ -1,4 +1,5 @@
 const express = require("express");
+const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const app = express();
@@ -18,13 +19,35 @@ app.get('/notes', (req, res) => res.sendFile(path.join(__dirname, 'notes.html'))
 app.get('/api/notes', (req, res) => {
     fs.readFile(`${__dirname}/db/db.json`, 'utf-8', (err, data) => {
         if (err) throw err;
-        
+
         res.json(JSON.parse(data));
     });
 });
+
+// Adds a new note to the db
 app.post('/api/notes', (req, res) => {
 
+    // Read in the contents of the db file
+    fs.readFile(`${__dirname}/db/db.json`, 'utf-8', (err, data) => {
+        if (err) throw err;
+
+        // Create the unique id and add it to the new note received in the request body
+        let uuid = uuidv4();
+        req.body.id = uuid;
+
+        let notes = JSON.parse(data);
+        notes.push(req.body);
+
+        // Write it back to the db file
+        fs.writeFile(`${__dirname}/db/db.json`, JSON.stringify(notes), (err) => {
+            if (err) throw err;
+
+            res.json(notes);
+        });
+    });
 });
+
+// Deletes a note from the db
 app.delete('/api/notes/:id', (req, res) => {
     const id = req.params.id;
     console.log(`Delete received for ID: ${id}`);
