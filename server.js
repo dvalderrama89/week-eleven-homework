@@ -50,7 +50,26 @@ app.post('/api/notes', (req, res) => {
 // Deletes a note from the db
 app.delete('/api/notes/:id', (req, res) => {
     const id = req.params.id;
-    console.log(`Delete received for ID: ${id}`);
+
+    // Read in the contents of the db file
+    fs.readFile(`${__dirname}/db/db.json`, 'utf-8', (err, data) => {
+        if (err) throw err;
+
+        let notes = JSON.parse(data);
+
+        for (let i = 0; i < notes.length; i++) {
+            if (id === notes[i].id) {
+                notes.splice(i, 1);
+            }
+        }
+
+        // Write it back to the db file
+        fs.writeFile(`${__dirname}/db/db.json`, JSON.stringify(notes), (err) => {
+            if (err) throw err;
+
+            res.json(notes);
+        });
+    });
 });
 
 app.listen(PORT, () => console.log(`App listening on PORT ${PORT}`));
